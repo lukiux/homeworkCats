@@ -3,37 +3,40 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Session;
 use App\Services\CatService;
+use App\Visitor;
 use \Cache;
 
 class CatController extends Controller
 {
     CONST N = 1000000;
-    CONST CACHE_KEY = 'CATS';
     protected $catService;
 
     public function __construct(CatService $cats) {
         $this->catService = $cats;
     }
 
-    public function show($id) {
+    public function show($pageId) {
+         
+        session_start();
+        $currentSessionId = "";
 
-        $key = "get.{$id}";
-        $cacheKey = $this->getCachedKey($key);
-
-        if (0 >= $id || $id > self::N) {
-            abort(404, "$id not found");
+        if (0 >= $pageId || $pageId > self::N) {
+            abort(404, "$pageId not found");
         }
 
-        
-        $data = Cache::remember($cacheKey, 60, function() {
+        $visitor = Visitor::firstOrCreate([
+            'page_id' => $pageId,
+            'session_id' => session_id()
+        ]);
+
+        $catsCom = Cache::remember($this->catService->getCachedKey($pageId), 60, function() {
             return $this->catService->getCatsComb();
         });
-        return view('cat', ['catsComb' => $data]);
-    }
 
-    public function getCachedKey($key) {
-        $key = strtoupper($key);
-        return self::CACHE_KEY . ".$key";
+        $this->catService->generateLogFile($catsCom, $pageId);
+        
+        return view('cat', ['catsComb' => $catsCom]);
     }
 }
