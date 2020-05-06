@@ -11,7 +11,7 @@ class CatService {
     protected function readFile() {
 
         $cats = array();
-        $file = fopen("../cats.txt", "r");
+        $file = fopen("cats.txt", "r");
 
         while(!feof($file)) {
 
@@ -47,7 +47,7 @@ class CatService {
         $dataJSON['countAll'] = Visitor::all()->count();
         $dataJSON['countN'] = Visitor::where('page_id', $n)->count();
 
-        $fp = fopen('../log.json', 'w');
+        $fp = fopen('log.json', 'w');
         fwrite($fp, json_encode($dataJSON));
         fclose($fp);
     }
